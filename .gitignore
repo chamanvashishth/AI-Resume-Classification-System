@@ -2,5 +2,10 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
-resume_classifier.joblib
+.env
 .DS_Store
+
+# Generated runtime artifacts
+resume_classifier.joblib
+resume_dataset.csv
+confusion_matrix.png
