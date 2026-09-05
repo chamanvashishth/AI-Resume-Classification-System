@@ -136,6 +136,31 @@ AI-Resume-Classification-System/
 
 ---
 
+
+## Deployment Reliability
+
+The Streamlit application is designed to run even when `resume_classifier.joblib` is not present in the repository.
+
+When the app starts:
+
+```text
+Saved model available?
+        │
+   ┌────┴────┐
+   │ Yes     │ No
+   ▼         ▼
+Load model   Recreate dataset
+             ↓
+             Train model automatically
+             ↓
+             Save model for the current runtime
+             ↓
+             Classify resume
+```
+
+This avoids deployment failures caused by a missing local `.joblib` file. On platforms with temporary storage, the model may need to be recreated after a full application restart.
+
+
 ## Installation
 
 ### 1. Clone the repository
