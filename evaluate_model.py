@@ -1,24 +1,15 @@
-from pathlib import Path
-
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
 from sklearn.metrics import ConfusionMatrixDisplay, classification_report
 from sklearn.model_selection import train_test_split
-import joblib
 
 from generate_dataset import ensure_dataset
+from model_utils import build_model
 
-DATASET_PATH = ensure_dataset()
-MODEL_PATH = Path("resume_classifier.joblib")
+dataset_path = ensure_dataset()
+df = pd.read_csv(dataset_path)
 
-if not MODEL_PATH.exists():
-    raise FileNotFoundError(
-        "Trained model not found. Run 'python train_model.py' first."
-    )
-
-df = pd.read_csv(DATASET_PATH)
-
-_, X_test, _, y_test = train_test_split(
+X_train, X_test, y_train, y_test = train_test_split(
     df["resume_text"],
     df["category"],
     test_size=0.25,
@@ -26,7 +17,8 @@ _, X_test, _, y_test = train_test_split(
     stratify=df["category"],
 )
 
-model = joblib.load(MODEL_PATH)
+model = build_model()
+model.fit(X_train, y_train)
 predictions = model.predict(X_test)
 
 print(classification_report(y_test, predictions))
