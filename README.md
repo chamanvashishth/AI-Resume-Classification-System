@@ -18,7 +18,7 @@ A beginner-friendly end-to-end NLP project that analyzes resume text and predict
 
 Resumes contain information about skills, education, projects, and experience. When many resumes need to be organized into broad job domains, manually sorting them can become repetitive.
 
-This project demonstrates a simple Machine Learning workflow for **resume text classification**.
+This project demonstrates a complete Machine Learning workflow for **resume text classification**.
 
 The system:
 
@@ -84,11 +84,11 @@ Machine Learning models work with numbers rather than raw text.
 
 For example:
 
-- Python, pandas, and machine learning may be useful signals for Data Science.
-- React and JavaScript may be useful signals for Web Development.
-- Accounting and investment may be useful signals for Finance.
+- Python, pandas, and machine learning may signal Data Science.
+- React and JavaScript may signal Web Development.
+- Accounting and investment may signal Finance.
 
-The project also considers one-word and two-word phrases using:
+The project considers both individual words and two-word phrases:
 
 ```python
 TfidfVectorizer(stop_words="english", ngram_range=(1, 2))
@@ -99,23 +99,15 @@ TfidfVectorizer(stop_words="english", ngram_range=(1, 2))
 The dataset is divided into:
 
 - **Training data** — used to learn patterns.
-- **Testing data** — used to evaluate the trained model.
+- **Testing data** — used to evaluate the model.
 
-The project uses a 75/25 split with stratification so that category proportions are preserved.
+The project uses a 75/25 split with stratification so category proportions are preserved.
 
 ### 4. Logistic Regression
 
 Logistic Regression is used as the classification model.
 
-It learns relationships between TF-IDF features and the known categories. For a new resume, it estimates probabilities for each category and selects the category with the highest probability.
-
-### 5. Prediction
-
-The trained model returns:
-
-- Predicted category
-- Confidence score
-- Category probabilities in the Streamlit interface
+It learns relationships between TF-IDF features and known categories. For a new resume, it estimates probabilities for each category and selects the category with the highest probability.
 
 ---
 
@@ -125,9 +117,10 @@ The trained model returns:
 AI-Resume-Classification-System/
 │
 ├── app.py                    # Streamlit web interface
-├── train_model.py            # Model training and evaluation
+├── model_utils.py            # Shared model build/train/load utilities
+├── train_model.py            # Training and evaluation script
 ├── predict_resume.py         # Command-line prediction
-├── evaluate_model.py         # Detailed evaluation + confusion matrix
+├── evaluate_model.py         # Classification report + confusion matrix
 ├── generate_dataset.py       # Recreates the demonstration dataset
 ├── requirements.txt          # Python dependencies
 ├── .gitignore
@@ -136,12 +129,11 @@ AI-Resume-Classification-System/
 
 ---
 
-
 ## Deployment Reliability
 
-The Streamlit application is designed to run even when `resume_classifier.joblib` is not present in the repository.
+The app no longer depends on `resume_classifier.joblib` being committed to GitHub.
 
-When the app starts:
+When the application starts:
 
 ```text
 Saved model available?
@@ -149,17 +141,20 @@ Saved model available?
    ┌────┴────┐
    │ Yes     │ No
    ▼         ▼
-Load model   Recreate dataset
+Load model   Recreate demo dataset
              ↓
-             Train model automatically
+             Train model in memory
              ↓
-             Save model for the current runtime
+             Cache model for the running app
              ↓
              Classify resume
 ```
 
-This avoids deployment failures caused by a missing local `.joblib` file. On platforms with temporary storage, the model may need to be recreated after a full application restart.
+The implementation also handles a corrupted or incompatible saved model by training a fresh model instead.
 
+This makes the Streamlit deployment independent of generated `.joblib` files and avoids the original `FileNotFoundError`.
+
+---
 
 ## Installation
 
@@ -176,7 +171,7 @@ cd AI-Resume-Classification-System
 pip install -r requirements.txt
 ```
 
-### 3. Train the model
+### 3. Train the model locally
 
 ```bash
 python train_model.py
@@ -200,6 +195,8 @@ python predict_resume.py
 streamlit run app.py
 ```
 
+The web app can run even when the trained model file does not exist because it can train the demonstration model automatically.
+
 ---
 
 ## Evaluation
@@ -210,7 +207,7 @@ For additional evaluation:
 python evaluate_model.py
 ```
 
-This prints the classification report and generates:
+This prints a classification report and generates:
 
 ```text
 confusion_matrix.png
@@ -226,7 +223,7 @@ The current demonstration dataset contains:
 - **4 categories**
 - Labeled examples for supervised learning
 
-The dataset is included as a reproducible demonstration resource. If it is missing, `generate_dataset.py` recreates it automatically.
+The dataset is recreated from the repository's embedded demonstration data when it is missing.
 
 ---
 
@@ -263,6 +260,7 @@ This project is a learning-focused prototype.
 ## Future Improvements
 
 - [x] Add a Streamlit interface
+- [x] Add automatic model recovery when the saved model is missing
 - [x] Add detailed evaluation support
 - [ ] Support PDF and DOCX resume uploads
 - [ ] Extract text automatically from uploaded resumes
