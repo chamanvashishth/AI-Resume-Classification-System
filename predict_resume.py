@@ -1,8 +1,11 @@
-import joblib
+from model_utils import load_or_train_model
 
-model = joblib.load("resume_classifier.joblib")
+model = load_or_train_model()
 
-resume = input("Paste resume text:\n")
+resume = input("Paste resume text:\n").strip()
+
+if not resume:
+    raise ValueError("Resume text cannot be empty.")
 
 prediction = model.predict([resume])[0]
 confidence = model.predict_proba([resume]).max()
