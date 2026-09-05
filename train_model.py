@@ -2,20 +2,14 @@ from pathlib import Path
 
 import joblib
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import train_test_split
-from sklearn.pipeline import Pipeline
 
-DATASET_PATH = Path("resume_dataset.csv")
+from generate_dataset import ensure_dataset
+from model_utils import MODEL_PATH, build_model
 
-if not DATASET_PATH.exists():
-    from generate_dataset import ensure_dataset
-
-    ensure_dataset(DATASET_PATH)
-
-df = pd.read_csv(DATASET_PATH)
+dataset_path = ensure_dataset()
+df = pd.read_csv(dataset_path)
 
 X_train, X_test, y_train, y_test = train_test_split(
     df["resume_text"],
@@ -25,13 +19,7 @@ X_train, X_test, y_train, y_test = train_test_split(
     stratify=df["category"],
 )
 
-model = Pipeline(
-    [
-        ("tfidf", TfidfVectorizer(stop_words="english", ngram_range=(1, 2))),
-        ("classifier", LogisticRegression(max_iter=2000)),
-    ]
-)
-
+model = build_model()
 model.fit(X_train, y_train)
 
 predictions = model.predict(X_test)
@@ -40,8 +28,11 @@ print("Accuracy:", round(accuracy_score(y_test, predictions), 3))
 print("\nClassification Report:\n")
 print(classification_report(y_test, predictions))
 
-joblib.dump(model, "resume_classifier.joblib")
-print("\nModel saved as resume_classifier.joblib")
+# Retrain on the full demonstration dataset before saving for deployment.
+model.fit(df["resume_text"], df["category"])
+joblib.dump(model, MODEL_PATH)
+
+print(f"\nModel saved as {MODEL_PATH}")
 
 sample_resume = """
 Machine Learning student skilled in Python, SQL, pandas, statistics,
@@ -54,6 +45,7 @@ probabilities = model.predict_proba([sample_resume])[0]
 
 print("\nSample Resume Prediction:", prediction)
 for label, probability in sorted(
-    zip(model.classes_, probabilities), key=lambda item: -item[1]
+    zip(model.classes_, probabilities),
+    key=lambda item: -item[1],
 ):
     print(f"{label}: {probability:.2%}")
