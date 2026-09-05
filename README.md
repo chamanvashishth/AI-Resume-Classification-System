@@ -2,69 +2,237 @@
 
 <div align="center">
 
-### Machine Learning-based Resume Category Classification
+## Machine Learning-Based Resume Classification
 
-A simple end-to-end NLP project that analyzes resume text and predicts the most relevant job category.
+A beginner-friendly end-to-end NLP project that takes resume text as input and predicts the job domain it most closely matches.
 
-[![Python](https://img.shields.io/badge/Python-3.x-blue.svg)](https://www.python.org/)
-[![scikit-learn](https://img.shields.io/badge/scikit--learn-ML-orange.svg)](https://scikit-learn.org/)
-[![License](https://img.shields.io/badge/Status-Learning%20Project-success.svg)](#important-notes)
+[![Python](https://img.shields.io/badge/Python-3.x-blue?logo=python)](https://www.python.org/)
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-Machine%20Learning-orange?logo=scikitlearn)](https://scikit-learn.org/)
+[![Project](https://img.shields.io/badge/Project-Learning%20Prototype-success)](#limitations)
 
 </div>
 
 ---
 
-## Overview
+## Table of Contents
 
-Recruiters often need to review resumes from candidates applying to different roles. This project explores how **Machine Learning and Natural Language Processing** can help organize resume text by automatically predicting a job category.
-
-The system currently classifies resumes into:
-
-- Data Science
-- Software Engineering
-- Web Development
-- Finance
+- [Project Overview](#project-overview)
+- [Problem Statement](#problem-statement)
+- [How the System Works](#how-the-system-works)
+- [Machine Learning Pipeline](#machine-learning-pipeline)
+- [Technologies Used](#technologies-used)
+- [Project Structure](#project-structure)
+- [Installation and Usage](#installation-and-usage)
+- [Dataset](#dataset)
+- [Model Evaluation](#model-evaluation)
+- [Example Prediction](#example-prediction)
+- [Limitations](#limitations)
+- [Future Improvements](#future-improvements)
+- [What I Learned](#what-i-learned)
 
 ---
 
-## How It Works
+# Project Overview
+
+Resumes contain useful information about a person's skills, education, tools, projects, and work experience. When there are many resumes, manually grouping them into broad job domains can become repetitive.
+
+This project explores a simple Machine Learning solution for that problem.
+
+The system reads **resume text**, converts the text into numerical features using **TF-IDF**, and then uses a **Logistic Regression classifier** to predict the most relevant category.
+
+The current version supports four categories:
+
+| Category | Examples of Relevant Skills |
+|---|---|
+| **Data Science** | Python, pandas, SQL, statistics, machine learning |
+| **Software Engineering** | C++, Java, algorithms, systems, software development |
+| **Web Development** | HTML, CSS, JavaScript, React, frontend/backend |
+| **Finance** | Accounting, investment, financial analysis, economics |
+
+The goal of this project is not to automate hiring decisions. It is to demonstrate how **text classification** can be applied to resume data.
+
+---
+
+# Problem Statement
+
+Suppose we have a collection of resumes belonging to different professional domains.
+
+For example:
+
+> Resume A mentions Python, machine learning, pandas, and data analysis.
+
+> Resume B mentions React, JavaScript, HTML, and CSS.
+
+Instead of manually deciding the category every time, we can train a model using previously labeled examples.
+
+The model learns the relationship between:
 
 ```text
-Resume Text
-     │
-     ▼
-TF-IDF Vectorization
-     │
-     ▼
-Logistic Regression
-     │
-     ▼
-Predicted Job Category
+Words and skills in a resume
+            ↓
+Patterns learned from training data
+            ↓
+Predicted job category
 ```
 
-### Pipeline
-
-1. Resume text is provided as input.
-2. **TF-IDF** converts the text into numerical features.
-3. A **Logistic Regression** model learns patterns from labeled examples.
-4. The trained model predicts the category of a new resume.
+This project implements that workflow from dataset preparation to prediction.
 
 ---
 
-## Tech Stack
+# How the System Works
 
-| Technology | Purpose |
+The complete process can be understood in five steps:
+
+```text
+                    ┌─────────────────┐
+                    │   Resume Text   │
+                    └────────┬────────┘
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │ Text Processing │
+                    └────────┬────────┘
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │ TF-IDF Features │
+                    └────────┬────────┘
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │ Logistic        │
+                    │ Regression      │
+                    └────────┬────────┘
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │ Predicted       │
+                    │ Category        │
+                    └─────────────────┘
+```
+
+---
+
+# Machine Learning Pipeline
+
+## 1. Resume Text
+
+The input is plain text extracted or provided from a resume.
+
+Example:
+
+```text
+Machine Learning student skilled in Python, SQL, pandas,
+statistics and scikit-learn. Built classification models
+and worked on data analysis projects.
+```
+
+At this stage, the computer cannot directly understand the meaning of the text. The text must first be converted into numbers.
+
+---
+
+## 2. TF-IDF Vectorization
+
+The project uses **TF-IDF (Term Frequency–Inverse Document Frequency)**.
+
+In simple terms, TF-IDF helps the model identify which words are important.
+
+For example:
+
+- A word such as **Python** may be useful when identifying Data Science resumes.
+- **React** may strongly indicate Web Development.
+- **Accounting** may indicate Finance.
+
+TF-IDF converts these words and phrases into numerical values that can be used by a Machine Learning model.
+
+The project uses:
+
+```python
+TfidfVectorizer(stop_words="english", ngram_range=(1, 2))
+```
+
+Using `ngram_range=(1, 2)` allows the model to consider both:
+
+- Single words, such as `machine`
+- Two-word phrases, such as `machine learning`
+
+---
+
+## 3. Train-Test Split
+
+The dataset is divided into two parts:
+
+- **Training data** — used to teach the model.
+- **Testing data** — used to evaluate the model on examples it did not train on.
+
+The split is performed using:
+
+```python
+train_test_split(
+    X,
+    y,
+    test_size=0.25,
+    random_state=42,
+    stratify=y
+)
+```
+
+This means approximately 75% of the data is used for training and 25% for testing.
+
+---
+
+## 4. Logistic Regression
+
+The classifier used in this project is **Logistic Regression**.
+
+Despite its name, Logistic Regression is commonly used for classification tasks.
+
+The model receives the numerical TF-IDF features and learns which patterns are associated with each category.
+
+For a new resume, the model can estimate probabilities such as:
+
+```text
+Data Science          → 92%
+Software Engineering  →  4%
+Web Development       →  2%
+Finance               →  2%
+```
+
+The category with the highest probability becomes the prediction.
+
+---
+
+## 5. Final Prediction
+
+Once training is complete, the model is saved locally.
+
+The prediction script allows a user to paste new resume text:
+
+```bash
+python predict_resume.py
+```
+
+The system then returns:
+
+- The predicted category
+- The model's confidence score
+
+---
+
+# Technologies Used
+
+| Technology | Role in the Project |
 |---|---|
-| **Python** | Core programming language |
-| **pandas** | Dataset handling |
-| **scikit-learn** | Machine learning pipeline |
-| **TF-IDF** | Text feature extraction |
-| **Logistic Regression** | Resume classification |
-| **joblib** | Model serialization |
+| **Python** | Main programming language |
+| **pandas** | Reading and handling the dataset |
+| **scikit-learn** | Machine Learning tools and pipeline |
+| **TF-IDF** | Converting text into numerical features |
+| **Logistic Regression** | Classification algorithm |
+| **joblib** | Saving and loading the trained model |
 
 ---
 
-## Project Structure
+# Project Structure
 
 ```text
 AI-Resume-Classification-System/
@@ -77,64 +245,185 @@ AI-Resume-Classification-System/
 └── .gitignore
 ```
 
-### File Description
+## File Explanation
 
-| File | Description |
-|---|---|
-| `train_model.py` | Trains and evaluates the classification model |
-| `predict_resume.py` | Predicts the category of new resume text |
-| `generate_dataset.py` | Recreates the demonstration dataset when needed |
-| `requirements.txt` | Lists required Python packages |
-| `.gitignore` | Excludes generated and environment files from Git |
+### `train_model.py`
+
+This is the main training script.
+
+It:
+
+1. Loads the dataset.
+2. Recreates the demonstration dataset if it is missing.
+3. Splits the data into training and testing sets.
+4. Builds the TF-IDF + Logistic Regression pipeline.
+5. Trains the model.
+6. Evaluates its performance.
+7. Saves the trained model.
 
 ---
 
-## Getting Started
+### `predict_resume.py`
 
-### 1. Clone the Repository
+This script is used after the model has been trained.
+
+The user pastes resume text, and the script returns the predicted category and confidence.
+
+---
+
+### `generate_dataset.py`
+
+This file recreates the demonstration dataset used by the project when the dataset file is not available.
+
+This makes the repository easier to run without requiring manual dataset setup.
+
+---
+
+### `requirements.txt`
+
+Contains the Python libraries required to run the project.
+
+---
+
+# Installation and Usage
+
+## Step 1: Clone the Repository
 
 ```bash
 git clone https://github.com/chamanvashishth/AI-Resume-Classification-System.git
 cd AI-Resume-Classification-System
 ```
 
-### 2. Install Dependencies
+---
+
+## Step 2: Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Train the Model
+The required packages are:
+
+- pandas
+- scikit-learn
+- joblib
+
+---
+
+## Step 3: Train the Model
+
+Run:
 
 ```bash
 python train_model.py
 ```
 
-The script:
+During training, the program will:
 
-- Loads the demonstration dataset
-- Creates the dataset automatically if it is missing
-- Splits the data into training and testing sets
-- Builds the TF-IDF + Logistic Regression pipeline
-- Evaluates the model
-- Saves the trained model as `resume_classifier.joblib`
+```text
+Load Dataset
+     ↓
+Split Data
+     ↓
+Convert Text Using TF-IDF
+     ↓
+Train Logistic Regression Model
+     ↓
+Evaluate Performance
+     ↓
+Save Trained Model
+```
 
-### 4. Predict a Resume Category
+After successful training, a model file named:
 
-After training the model:
+```text
+resume_classifier.joblib
+```
+
+is created.
+
+---
+
+## Step 4: Predict a New Resume
+
+Run:
 
 ```bash
 python predict_resume.py
 ```
 
-Paste resume text when prompted, and the system returns:
+Paste resume text when prompted.
 
-- Predicted category
-- Prediction confidence
+Example:
+
+```text
+Experienced in Python, machine learning, SQL, data analysis,
+pandas and predictive modeling.
+```
 
 ---
 
-## Example
+# Dataset
+
+The current demonstration dataset contains:
+
+- **140 resume samples**
+- **4 categories**
+- Labeled examples for supervised learning
+
+The categories are:
+
+```text
+Data Science
+Software Engineering
+Web Development
+Finance
+```
+
+The dataset is intentionally designed for demonstrating the Machine Learning workflow.
+
+> **Important:** This is a learning and prototype dataset. It should not be considered representative of all real-world resumes.
+
+---
+
+# Model Evaluation
+
+The current local experiment achieved:
+
+```text
+Accuracy: 1.00
+```
+
+At first glance, this looks perfect. However, this result needs to be interpreted carefully.
+
+## Why This Does Not Automatically Mean the Model Is Perfect
+
+The dataset is:
+
+- Small
+- Structured
+- Limited to four categories
+- Built for demonstration purposes
+
+Because the categories contain relatively distinct vocabulary, the model can separate them more easily than it could separate genuinely diverse real-world resumes.
+
+Therefore:
+
+> **The current accuracy demonstrates that the pipeline works on this dataset. It does not prove production-level performance.**
+
+A stronger evaluation would use:
+
+- More resume samples
+- Real-world variation in writing styles
+- More overlapping job roles
+- Independent validation data
+- Class imbalance analysis
+- Precision, recall, and F1-score comparisons
+- Bias and fairness testing
+
+---
+
+# Example Prediction
 
 ### Input
 
@@ -144,92 +433,100 @@ statistics, scikit-learn and predictive modeling.
 Built classification projects and analyzed datasets.
 ```
 
-### Output
+### Processing
+
+```text
+Resume Text
+     ↓
+TF-IDF extracts important terms
+     ↓
+Logistic Regression evaluates learned patterns
+     ↓
+Category probabilities are calculated
+```
+
+### Expected Output
 
 ```text
 Predicted Category: Data Science
 Confidence: XX.XX%
 ```
 
----
-
-## Dataset
-
-The current demonstration dataset contains:
-
-- **140 samples**
-- **4 job categories**
-
-It is designed to demonstrate the complete Machine Learning workflow from text preprocessing to prediction.
-
-> The dataset is intentionally small and should be treated as a learning/prototyping dataset rather than a production dataset.
+The exact confidence may change depending on the trained model and dataset.
 
 ---
 
-## Model Evaluation
+# Limitations
 
-In the current local experiment, the model achieved:
+This project is currently a **Machine Learning prototype**.
 
-```text
-Accuracy: 1.00
-```
+Some important limitations are:
 
-### Important Context
+### 1. Small Dataset
 
-This result should **not** be interpreted as real-world production performance.
+A dataset with 140 samples is useful for learning but is not sufficient for a production-grade classification system.
 
-The current dataset is relatively small and structured, which can make the classification task easier than working with genuinely diverse resumes. A realistic evaluation would require:
+### 2. Limited Categories
 
-- A larger dataset
-- More diverse resume formats
-- Additional job categories
-- Independent validation data
-- Bias and fairness evaluation
+Real job markets contain many overlapping roles. Four categories simplify the classification problem.
 
----
+### 3. Resume Diversity
 
-## Limitations
+Real resumes vary significantly in:
 
-This project is a learning-focused prototype and has several limitations:
+- Writing style
+- Formatting
+- Experience level
+- Skills
+- Terminology
 
-- Limited dataset size
-- Only four categories
-- Resume text may not reflect real-world diversity
-- High accuracy on this dataset may not generalize to unseen resumes
-- The system should not be used as an automated hiring decision tool
+The demonstration dataset cannot capture all of this variation.
 
----
+### 4. Hiring Should Not Be Automated
 
-## Future Improvements
+A model like this should not independently decide whether a candidate should be hired or rejected.
 
-- [ ] Add more resume categories
-- [ ] Use a larger and more diverse dataset
-- [ ] Improve text preprocessing
-- [ ] Compare multiple machine learning models
-- [ ] Add confusion matrix and detailed visual evaluation
-- [ ] Build a Streamlit web interface
-- [ ] Add resume file upload support
-- [ ] Explore transformer-based NLP models
-- [ ] Add fairness and bias evaluation
+Resume classification can be affected by biased training data and should be used carefully, with appropriate human oversight.
 
 ---
 
-## Key Learning Outcomes
+# Future Improvements
 
-Through this project, I worked with:
+The next versions of this project could include:
 
+- [ ] A larger and more diverse dataset
+- [ ] Additional job categories
+- [ ] Better text preprocessing
+- [ ] Comparison with Naive Bayes and Support Vector Machines
+- [ ] Confusion matrix visualization
+- [ ] Precision, recall, and F1-score charts
+- [ ] Streamlit web interface
+- [ ] Resume file upload support
+- [ ] PDF/DOCX text extraction
+- [ ] Transformer-based NLP models
+- [ ] Bias and fairness evaluation
+- [ ] Deployment as a web application
+
+---
+
+# What I Learned
+
+While building this project, I worked with:
+
+- Supervised Machine Learning
 - Text classification
 - Natural Language Processing basics
 - TF-IDF vectorization
 - Logistic Regression
 - Train-test splitting
 - Model evaluation
-- Prediction probabilities
-- Building an end-to-end Machine Learning workflow
+- Classification probabilities
+- Saving and loading trained models
+- Structuring a complete Machine Learning project
 
 ---
 
-## Author
+# Author
 
 **Chaman Vashishth**
 
@@ -238,18 +535,26 @@ Through this project, I worked with:
 
 ---
 
-## Important Notes
+# Final Note
 
-This repository is created for **learning, experimentation, and demonstrating a Machine Learning workflow**.
+This project focuses on understanding how a complete text-classification workflow can be built using Python and scikit-learn.
 
-Automated resume classification can introduce bias and should not be treated as a replacement for human judgment in real hiring decisions.
+It is a useful starting point for learning how text data moves from:
 
----
+```text
+Raw Resume Text
+      ↓
+Numerical Features
+      ↓
+Machine Learning Model
+      ↓
+Predicted Category
+```
 
 <div align="center">
 
-⭐ If you found this project useful, consider starring the repository.
+### ⭐ If you found this project useful, consider starring the repository.
 
-**Built as part of my Machine Learning learning journey.**
+Built as part of my Machine Learning learning journey.
 
 </div>
